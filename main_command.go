@@ -31,6 +31,7 @@ var runCommand = cli.Command{
 		}
 		cmd := ctx.Args().Get(0)
 		tty := ctx.Bool("it")
+		logrus.Infof("run cmd = %s", cmd)
 		Run(tty, cmd)
 		return nil
 	},
@@ -46,7 +47,7 @@ var initCommand = cli.Command{
 		2. 执行容器初始化操作
 	*/
 	Action: func(ctx *cli.Context) error {
-		logrus.Infof("[initCommand] init comeon")
+		logrus.Infof("[initCommand] init come on")
 		cmd := ctx.Args().Get(0)
 		logrus.Infof("[initCommand] init command %s", cmd)
 		return container.RunContainerInitProcess(cmd, nil)

@@ -16,10 +16,6 @@ import (
 func RunContainerInitProcess(command string, args []string) error {
 	logrus.Infof("command %s", command)
 
-	// MS_NOEXEC 在本文件系统不允许运行其他程序。
-	// MS_NOSUID 在本系统中运行程序的时候，不允许 set-user-ID 或 set-group-ID
-	// MS_NOD 这个参数是自 Linux 2.4 ，所有 mount 的系统都会默认设定的参数。
-
 	// systemd 加入linux之后, mount namespace 就变成 shared by default, 所以你必须显示声明你要这个新的mount namespace独立。
 	// 即 mount proc 之前先把所有挂载点的传播类型改为 private，避免本 namespace 中的挂载事件外泄。
 	// 把所有挂载点的传播类型改为 private，避免本 namespace 中的挂载事件外泄。
@@ -27,6 +23,10 @@ func RunContainerInitProcess(command string, args []string) error {
 
 	// 如果不先做 private mount，会导致挂载事件外泄，后续再执行 mydocker 命令时 /proc 文件系统异常
 	// 可以执行 mount -t proc proc /proc 命令重新挂载来解决
+
+	// MS_NOEXEC 在本文件系统不允许运行其他程序。
+	// MS_NOSUID 在本系统中运行程序的时候，不允许 set-user-ID 或 set-group-ID
+	// MS_NOD 这个参数是自 Linux 2.4 ，所有 mount 的系统都会默认设定的参数。
 	defaultMountFlags := syscall.MS_NOEXEC | syscall.MS_NOSUID | syscall.MS_NODEV
 	_ = syscall.Mount("proc", "/proc", "proc", uintptr(defaultMountFlags), "")
 	argv := []string{command}

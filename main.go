@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
-
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	"os"
+	"time"
 )
 
 const usage = `mydocker is a simple container runtime implementation.
@@ -23,7 +23,9 @@ func main() {
 
 	app.Before = func(ctx *cli.Context) error {
 		// init logger settings
-		logrus.SetFormatter(&logrus.JSONFormatter{})
+		logrus.SetFormatter(&logrus.JSONFormatter{
+			TimestampFormat: time.DateTime,
+		})
 		logrus.SetOutput(os.Stdout)
 		return nil
 	}
