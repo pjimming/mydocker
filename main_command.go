@@ -32,7 +32,7 @@ var runCommand = cli.Command{
 		cmd := ctx.Args().Get(0)
 		tty := ctx.Bool("it")
 		logrus.Infof("run cmd = %s", cmd)
-		Run(tty, cmd)
+		Run(tty, []string{cmd})
 		return nil
 	},
 }
@@ -50,6 +50,6 @@ var initCommand = cli.Command{
 		logrus.Infof("[initCommand] init come on")
 		cmd := ctx.Args().Get(0)
 		logrus.Infof("[initCommand] init command %s", cmd)
-		return container.RunContainerInitProcess(cmd, nil)
+		return container.RunContainerInitProcess()
 	},
 }
