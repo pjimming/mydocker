@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pjimming/mydocker/cgroup/subsystems"
 	"github.com/pjimming/mydocker/container"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -13,7 +14,7 @@ import (
 进程，然后在子进程中，调用/proc/self/exe,也就是调用自己，发送init参数，调用我们写的init方法，
 去初始化容器的一些资源。
 */
-func Run(tty bool, cmd []string) {
+func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig) {
 	parent, writePipe, err := container.NewParentProcess(tty)
 	if err != nil {
 		return

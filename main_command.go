@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/pjimming/mydocker/cgroup/subsystems"
 	"github.com/pjimming/mydocker/container"
 	"github.com/sirupsen/logrus"
+	"strings"
 
 	"github.com/urfave/cli"
 )
@@ -18,6 +20,21 @@ var runCommand = cli.Command{
 			Name:  "it",
 			Usage: "enable tty",
 		},
+		cli.StringFlag{
+			// 限制进程内存使用量
+			Name:  "mem",
+			Usage: "memory limit, e.g.: -mem 100m",
+		},
+		cli.StringFlag{
+			// 限制进程cpu使用率
+			Name:  "cpu",
+			Usage: "cpu quota, e.g.: -cpu 100",
+		},
+		cli.StringFlag{
+			// 限制进程cpu使用率
+			Name:  "cpuset",
+			Usage: "cpuset limit, e.g.: -cpuset 2,4",
+		},
 	},
 
 	/*
@@ -29,10 +46,19 @@ var runCommand = cli.Command{
 		if len(ctx.Args()) < 1 {
 			return fmt.Errorf("missing container command")
 		}
-		cmd := ctx.Args().Get(0)
+
+		cmdArray := make([]string, 0)
+		for _, cmd := range ctx.Args() {
+			cmdArray = append(cmdArray, cmd)
+		}
 		tty := ctx.Bool("it")
-		logrus.Infof("run cmd = %s", cmd)
-		Run(tty, []string{cmd})
+		resConf := &subsystems.ResourceConfig{
+			MemoryLimit: ctx.String("mem"),
+			CpuShare:    ctx.String("cpu"),
+			CpuSet:      ctx.String("cpuset"),
+		}
+		logrus.Infof("run cmd = %s", strings.Join(cmdArray, " "))
+		Run(tty, cmdArray, resConf)
 		return nil
 	},
 }
