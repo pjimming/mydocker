@@ -16,7 +16,7 @@ func TestFindCgroupMountPoint(t *testing.T) {
 	ast.Nil(err)
 	t.Logf("cpuset subsystem mount point %v", cpusetMountPoint)
 
-	memoryMountPoint, err := findCgroupMountPoint("memory")
+	memoryMountPoint, err := findCgroupMountPoint((&MemorySubsystem{}).Name())
 	ast.Nil(err)
 	t.Logf("memory subsystem mount point %v", memoryMountPoint)
 }
