@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/pjimming/mydocker/cgroup/subsystems"
+	"github.com/pjimming/mydocker/cgroups/subsystems"
 	"github.com/pjimming/mydocker/container"
 	"github.com/sirupsen/logrus"
 	"strings"
@@ -12,7 +12,7 @@ import (
 
 var runCommand = cli.Command{
 	Name: "run",
-	Usage: `Create a container with namespace and cgroup limit
+	Usage: `Create a container with namespace and cgroups limit
 			mydocker run -it [command]`,
 
 	Flags: []cli.Flag{

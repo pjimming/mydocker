@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
-	
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,7 +14,7 @@ const mountPointIndex = 4
 func getCgroupPath(subsystem string, cgroupPath string, autoCreate bool) (string, error) {
 	cgroupRoot, err := findCgroupMountPoint(subsystem)
 	if err != nil {
-		logrus.Errorf("find cgroup mount point fail, %v", err)
+		logrus.Errorf("find cgroups mount point fail, %v", err)
 		return "", err
 	}
 
@@ -48,7 +48,7 @@ func findCgroupMountPoint(subsystem string) (string, error) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		// txt 大概是这样的：104 85 0:20 / /sys/fs/cgroup/memory rw,nosuid,nodev,noexec,relatime - cgroup cgroup rw,memory
+		// txt 大概是这样的：104 85 0:20 / /sys/fs/cgroups/memory rw,nosuid,nodev,noexec,relatime - cgroups cgroups rw,memory
 		txt := scanner.Text()
 		fields := strings.Split(txt, " ")
 		// 对最后一个元素按逗号进行分割，这里的最后一个元素就是 rw,memory
@@ -57,7 +57,7 @@ func findCgroupMountPoint(subsystem string) (string, error) {
 		for _, opt := range subsystems {
 			if opt == subsystem {
 				// 如果等于指定的 subsystem，那么就返回这个挂载点跟目录，就是第四个元素，
-				// 这里就是`/sys/fs/cgroup/memory`,即我们要找的根目录
+				// 这里就是`/sys/fs/cgroups/memory`,即我们要找的根目录
 				return fields[mountPointIndex], nil
 			}
 		}

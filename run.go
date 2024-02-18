@@ -1,7 +1,8 @@
 package main
 
 import (
-	"github.com/pjimming/mydocker/cgroup/subsystems"
+	"github.com/pjimming/mydocker/cgroups"
+	"github.com/pjimming/mydocker/cgroups/subsystems"
 	"github.com/pjimming/mydocker/container"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -22,6 +23,22 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig) {
 	if err = parent.Start(); err != nil {
 		logrus.Errorf("run fail, %v", err)
 	}
+
+	// new cgroup manager
+	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup")
+	defer func() {
+		if err = cgroupManager.Destroy(); err != nil {
+			logrus.Errorf("cgroup manager destroy fail, %v", err)
+		}
+	}()
+
+	if err = cgroupManager.Set(runResConf); err != nil {
+		logrus.Errorf("set cgroup res fail, %v", err)
+	}
+	if err = cgroupManager.Apply(parent.Process.Pid, runResConf); err != nil {
+		logrus.Errorf("apply %d process cgroup res fail, %v", parent.Process.Pid, err)
+	}
+	// 在子进程创建后才能通过匹配来发送参数
 	sendInitCommand(cmd, writePipe)
 	_ = parent.Wait()
 	os.Exit(-1)
