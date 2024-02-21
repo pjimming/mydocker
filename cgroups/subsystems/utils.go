@@ -14,7 +14,7 @@ const mountPointIndex = 4
 func getCgroupPath(subsystem string, cgroupPath string, autoCreate bool) (string, error) {
 	cgroupRoot, err := findCgroupMountPoint(subsystem)
 	if err != nil {
-		logrus.Errorf("find cgroups mount point fail, %v", err)
+		logrus.Errorf("find %s cgroups mount point fail, %v", subsystem, err)
 		return "", err
 	}
 

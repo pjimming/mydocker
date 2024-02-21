@@ -27,6 +27,7 @@ func main() {
 			TimestampFormat: time.DateTime,
 		})
 		logrus.SetOutput(os.Stdout)
+		logrus.SetLevel(logrus.DebugLevel)
 		return nil
 	}
 

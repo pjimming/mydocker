@@ -27,8 +27,8 @@ var runCommand = cli.Command{
 		},
 		cli.StringFlag{
 			// 限制进程cpu使用率
-			Name:  "cpu",
-			Usage: "cpu quota, e.g.: -cpu 100",
+			Name:  "cpushare",
+			Usage: "cpu quota, e.g.: -cpushare 100",
 		},
 		cli.StringFlag{
 			// 限制进程cpu使用率
@@ -54,7 +54,7 @@ var runCommand = cli.Command{
 		tty := ctx.Bool("it")
 		resConf := &subsystems.ResourceConfig{
 			MemoryLimit: ctx.String("mem"),
-			CpuShare:    ctx.String("cpu"),
+			CpuShare:    ctx.String("cpushare"),
 			CpuSet:      ctx.String("cpuset"),
 		}
 		logrus.Infof("run cmd = %s", strings.Join(cmdArray, " "))

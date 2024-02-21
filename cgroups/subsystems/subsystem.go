@@ -13,13 +13,15 @@ type Subsystem interface {
 	// Name 返回子系统的名称，如cpu、memory
 	Name() string
 	// Set 设置某个cgroup在这个子系统的资源限制
-	Set(path string, res *ResourceConfig) error
+	Set(cgroupPath string, res *ResourceConfig) error
 	// Apply 将进程添加到某个cgroup中
-	Apply(path string, pid int, res *ResourceConfig) error
+	Apply(cgroupPath string, pid int, res *ResourceConfig) error
 	// Remove 移除某个cgroup
-	Remove(path string) error
+	Remove(cgroupPath string) error
 }
 
 var SubsystemsIns = []Subsystem{
 	&MemorySubsystem{},
+	&CpuSubsystem{},
+	&CpusetSubsystem{},
 }

@@ -21,7 +21,7 @@ func (s *MemorySubsystem) Set(cgroupPath string, res *ResourceConfig) error {
 		return nil
 	}
 
-	logrus.Infof("memory set, path: %s, limit: %s", cgroupPath, res.MemoryLimit)
+	logrus.Debugf("memory set, path: %s, limit: %s", cgroupPath, res.MemoryLimit)
 
 	subsystemCgroupPath, err := getCgroupPath(s.Name(), cgroupPath, true)
 	if err != nil {
@@ -41,6 +41,9 @@ func (s *MemorySubsystem) Apply(cgroupPath string, pid int, res *ResourceConfig)
 	if res.MemoryLimit == "" {
 		return nil
 	}
+
+	logrus.Debugf("memory set pid %d, path: %s", pid, res.CpuShare)
+
 	subsystemCgroupPath, err := getCgroupPath(s.Name(), cgroupPath, false)
 	if err != nil {
 		logrus.Errorf("memory subsystem get cgroups path fail, %v", err)
@@ -48,7 +51,7 @@ func (s *MemorySubsystem) Apply(cgroupPath string, pid int, res *ResourceConfig)
 	}
 
 	if err = os.WriteFile(path.Join(subsystemCgroupPath, "tasks"), []byte(strconv.Itoa(pid)), 0644); err != nil {
-		logrus.Errorf("apple %d to memory task fail, %v", pid, err)
+		logrus.Errorf("apply %d to memory tasks fail, %v", pid, err)
 		return err
 	}
 	return nil
@@ -60,5 +63,6 @@ func (s *MemorySubsystem) Remove(cgroupPath string) error {
 		logrus.Errorf("memory subsystem get cgroups path fail, %v", err)
 		return err
 	}
+	logrus.Debugf("remove all %s", subsystemCgroupPath)
 	return os.RemoveAll(subsystemCgroupPath)
 }
