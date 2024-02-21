@@ -21,7 +21,7 @@ func (s *MemorySubsystem) Set(cgroupPath string, res *ResourceConfig) error {
 		return nil
 	}
 
-	logrus.Debugf("memory set, path: %s, limit: %s", cgroupPath, res.MemoryLimit)
+	logrus.Infof("memory set, path: %s, limit: %s", cgroupPath, res.MemoryLimit)
 
 	subsystemCgroupPath, err := getCgroupPath(s.Name(), cgroupPath, true)
 	if err != nil {
@@ -42,7 +42,7 @@ func (s *MemorySubsystem) Apply(cgroupPath string, pid int, res *ResourceConfig)
 		return nil
 	}
 
-	logrus.Debugf("memory set pid %d, path: %s", pid, res.CpuShare)
+	logrus.Infof("memory set pid %d, path: %s", pid, res.CpuShare)
 
 	subsystemCgroupPath, err := getCgroupPath(s.Name(), cgroupPath, false)
 	if err != nil {
@@ -63,6 +63,6 @@ func (s *MemorySubsystem) Remove(cgroupPath string) error {
 		logrus.Errorf("memory subsystem get cgroups path fail, %v", err)
 		return err
 	}
-	logrus.Debugf("remove all %s", subsystemCgroupPath)
+	logrus.Infof("remove all %s", subsystemCgroupPath)
 	return os.RemoveAll(subsystemCgroupPath)
 }

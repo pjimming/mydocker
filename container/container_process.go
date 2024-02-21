@@ -30,6 +30,7 @@ func NewParentProcess(tty bool) (*exec.Cmd, *os.File, error) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags: syscall.CLONE_NEWUTS | syscall.CLONE_NEWPID | syscall.CLONE_NEWNS | syscall.CLONE_NEWNET | syscall.CLONE_NEWIPC,
 	}
+	cmd.Dir = "/root/busybox"
 
 	if tty {
 		cmd.Stdin = os.Stdin

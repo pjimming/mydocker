@@ -22,7 +22,7 @@ func (s *CpusetSubsystem) Set(cgroupPath string, res *ResourceConfig) error {
 		return nil
 	}
 
-	logrus.Debugf("cpu set, path: %s, limit: %s", cgroupPath, res.CpuSet)
+	logrus.Infof("cpu set, path: %s, limit: %s", cgroupPath, res.CpuSet)
 
 	subsystemCgroupPath, err := getCgroupPath(s.Name(), cgroupPath, true)
 	if err != nil {
@@ -42,7 +42,7 @@ func (s *CpusetSubsystem) Apply(cgroupPath string, pid int, res *ResourceConfig)
 		return nil
 	}
 
-	logrus.Debugf("cpuset set %d, path: %s", pid, res.CpuSet)
+	logrus.Infof("cpuset set %d, path: %s", pid, res.CpuSet)
 
 	subsystemCgroupPath, err := getCgroupPath(s.Name(), cgroupPath, false)
 	if err != nil {
@@ -63,6 +63,6 @@ func (s *CpusetSubsystem) Remove(cgroupPath string) error {
 		logrus.Errorf("cpuset subsystem get cgroups path fail, %v", err)
 		return err
 	}
-	logrus.Debugf("remove all %s", subsystemCgroupPath)
+	logrus.Infof("remove all %s", subsystemCgroupPath)
 	return os.RemoveAll(subsystemCgroupPath)
 }
