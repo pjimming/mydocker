@@ -30,6 +30,7 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig) {
 		if err = cgroupManager.Destroy(); err != nil {
 			logrus.Errorf("cgroup manager destroy fail, %v", err)
 		}
+		container.DeleteWorkSpace("/root", "/root/merged")
 	}()
 
 	if err = cgroupManager.Set(runResConf); err != nil {
@@ -41,7 +42,6 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig) {
 	// 在子进程创建后才能通过匹配来发送参数
 	sendInitCommand(cmd, writePipe)
 	_ = parent.Wait()
-	os.Exit(-1)
 }
 
 // sendInitCommand 通过writePipe将指令发送给子进程

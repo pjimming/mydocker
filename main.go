@@ -23,7 +23,7 @@ func main() {
 
 	app.Before = func(ctx *cli.Context) error {
 		// init logger settings
-		logrus.SetFormatter(&logrus.JSONFormatter{
+		logrus.SetFormatter(&logrus.TextFormatter{
 			TimestampFormat: time.DateTime,
 		})
 		logrus.SetOutput(os.Stdout)
