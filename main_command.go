@@ -35,6 +35,11 @@ var runCommand = cli.Command{
 			Name:  "cpuset",
 			Usage: "cpuset limit, e.g.: -cpuset 2,4",
 		},
+		cli.StringFlag{
+			// volume
+			Name:  "v",
+			Usage: "volume, e.g.: -v /etc/conf:/etc/conf",
+		},
 	},
 
 	/*
@@ -58,7 +63,8 @@ var runCommand = cli.Command{
 			CpuSet:      ctx.String("cpuset"),
 		}
 		logrus.Infof("run cmd = %s", strings.Join(cmdArray, " "))
-		Run(tty, cmdArray, resConf)
+		volume := ctx.String("v")
+		Run(tty, cmdArray, resConf, volume)
 		return nil
 	},
 }

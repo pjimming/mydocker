@@ -15,8 +15,8 @@ import (
 进程，然后在子进程中，调用/proc/self/exe,也就是调用自己，发送init参数，调用我们写的init方法，
 去初始化容器的一些资源。
 */
-func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig) {
-	parent, writePipe, err := container.NewParentProcess(tty)
+func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume string) {
+	parent, writePipe, err := container.NewParentProcess(tty, volume)
 	if err != nil {
 		return
 	}
@@ -30,7 +30,7 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig) {
 		if err = cgroupManager.Destroy(); err != nil {
 			logrus.Errorf("cgroup manager destroy fail, %v", err)
 		}
-		container.DeleteWorkSpace("/root", "/root/merged")
+		container.DeleteWorkSpace("/root", "/root/merged", volume)
 	}()
 
 	if err = cgroupManager.Set(runResConf); err != nil {

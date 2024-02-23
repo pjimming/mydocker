@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -14,10 +16,19 @@ import (
 */
 
 // NewWorkSpace create an overlays filesystem as container root workspace
-func NewWorkSpace(rootPath, mntPath string) {
+func NewWorkSpace(rootPath, mntPath, volume string) {
 	createLower(rootPath)
 	createDirs(rootPath)
 	mountOverlayFs(rootPath, mntPath)
+
+	if volume != "" {
+		hostPath, containerPath, err := volumeExtract(volume)
+		if err != nil {
+			logrus.Errorf("volume extract fail: %v", err)
+			return
+		}
+		mountVolume(mntPath, hostPath, containerPath)
+	}
 }
 
 // createLower 把busybox作为overlays的lower层
@@ -73,6 +84,38 @@ func mountOverlayFs(rootPath, mntPath string) {
 	}
 }
 
+func volumeExtract(volume string) (sourcePath, destinationPath string, err error) {
+	parts := strings.Split(volume, ":")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invaild volume [%s]", volume)
+	}
+
+	sourcePath, destinationPath = parts[0], parts[1]
+	if sourcePath == "" || destinationPath == "" {
+		return "", "", fmt.Errorf("invaild volume [%s]", volume)
+	}
+	return
+}
+
+// 使用 bind mount 挂载 volume
+func mountVolume(mntPath, hostPath, containerPath string) {
+	if err := os.Mkdir(hostPath, 0777); err != nil {
+		logrus.Errorf("mkdir fail, %v", err)
+	}
+	containerPathInHost := path.Join(mntPath, containerPath)
+	if err := os.Mkdir(containerPathInHost, 0777); err != nil {
+		logrus.Errorf("mkdir fail, %v", err)
+	}
+	// 通过bind mount 将宿主机目录挂载到容器目录
+	// mount -o bind /hostPath /containerPath
+	cmd := exec.Command("mount", "-o", "bind", hostPath, containerPathInHost)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		logrus.Errorf("mount volume failed. %v", err)
+	}
+}
+
 func pathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
@@ -84,9 +127,31 @@ func pathExists(path string) (bool, error) {
 	return false, err
 }
 
-func DeleteWorkSpace(rootPath, mntPath string) {
+func DeleteWorkSpace(rootPath, mntPath, volume string) {
+	if volume != "" {
+		_, containerPath, err := volumeExtract(volume)
+		if err != nil {
+			logrus.Errorf("volume extract fail, %v", err)
+			return
+		}
+		umountVolume(mntPath, containerPath)
+	}
+
 	umountOverlayFs(mntPath)
 	deleteDirs(rootPath)
+}
+
+func umountVolume(mntPath, containerPath string) {
+	// mntPath 为容器在宿主机上的挂载点，例如 /root/merged
+	// containerPath 为 volume 在容器中对应的目录，例如 /root/tmp
+	// containerPathInHost 则是容器中目录在宿主机上的具体位置，例如 /root/merged/root/tmp
+	containerPathInHost := path.Join(mntPath, containerPath)
+	cmd := exec.Command("umount", containerPathInHost)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		logrus.Errorf("umount volume failed. %v", err)
+	}
 }
 
 func umountOverlayFs(mntPath string) {
