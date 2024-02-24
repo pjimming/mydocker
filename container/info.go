@@ -34,7 +34,7 @@ func RecordInfo(containerPid int, commandArray []string, containerName, containe
 		Name:        containerName,
 		Command:     command,
 		CreatedTime: time.Now().Format(time.DateTime),
-		Status:      "RUNNING",
+		Status:      RUNNING,
 	}
 
 	infoStr, err := jsonx.ToJsonString(containerInfo)

@@ -16,17 +16,14 @@ func getContainerDir(containerId string) string {
 
 // 根据containerId获取容器的pid
 func getPidById(id string) (string, error) {
-	dir := getContainerDir(id)
-	configFilePath := filepath.Join(dir, ConfigName)
-
-	info := new(Info)
-	if err := jsonx.ReadJsonFile(configFilePath, info); err != nil {
-		logrus.Errorf("read json file %s error, %v", configFilePath, err)
+	info, err := getInfoById(id)
+	if err != nil {
 		return "", err
 	}
 	return info.Pid, nil
 }
 
+// 根据pid获取进程的env
 func getEnvsByPid(pid string) ([]string, error) {
 	path := fmt.Sprintf("/proc/%s/environ", pid)
 	content, err := os.ReadFile(path)
@@ -37,4 +34,17 @@ func getEnvsByPid(pid string) ([]string, error) {
 
 	envs := strings.Split(string(content), "\u0000")
 	return envs, nil
+}
+
+// 根据 containerId 获取 Info
+func getInfoById(id string) (*Info, error) {
+	dir := getContainerDir(id)
+	configFilePath := filepath.Join(dir, ConfigName)
+
+	info := new(Info)
+	if err := jsonx.ReadJsonFile(configFilePath, info); err != nil {
+		logrus.Errorf("read json file %s error, %v", configFilePath, err)
+		return nil, err
+	}
+	return info, nil
 }
