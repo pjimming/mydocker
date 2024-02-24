@@ -32,6 +32,10 @@ var runCommand = cli.Command{
 			Name:  "it",
 			Usage: "enable tty",
 		},
+		cli.BoolFlag{
+			Name:  "d",
+			Usage: "detach container",
+		},
 		cli.StringFlag{
 			// 限制进程内存使用量
 			Name:  "mem",
@@ -69,6 +73,13 @@ var runCommand = cli.Command{
 			cmdArray = append(cmdArray, cmd)
 		}
 		tty := ctx.Bool("it")
+		detach := ctx.Bool("d")
+
+		// tty 与 detach 不能共存
+		if tty && detach {
+			return fmt.Errorf("it and d paramter can not both provided")
+		}
+		
 		resConf := &subsystems.ResourceConfig{
 			MemoryLimit: ctx.String("mem"),
 			CpuShare:    ctx.String("cpushare"),
