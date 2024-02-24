@@ -22,7 +22,7 @@ type Subsystem interface {
 	CgroupFileName() string
 }
 
-var SubsystemsIns = []Subsystem{
+var Ins = []Subsystem{
 	&MemorySubsystem{},
 	&CpuSubsystem{},
 	&CpusetSubsystem{},

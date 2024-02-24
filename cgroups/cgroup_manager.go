@@ -16,7 +16,7 @@ func NewCgroupManager(path string) *CgroupManager {
 
 func (c *CgroupManager) Apply(pid int, res *subsystems.ResourceConfig) error {
 	var errMsg []string
-	for _, subsys := range subsystems.SubsystemsIns {
+	for _, subsys := range subsystems.Ins {
 		if err := subsys.Apply(c.Path, pid, res); err != nil {
 			errMsg = append(errMsg, err.Error())
 		}
@@ -30,7 +30,7 @@ func (c *CgroupManager) Apply(pid int, res *subsystems.ResourceConfig) error {
 
 func (c *CgroupManager) Set(res *subsystems.ResourceConfig) error {
 	var errMsg []string
-	for _, subsys := range subsystems.SubsystemsIns {
+	for _, subsys := range subsystems.Ins {
 		if err := subsys.Set(c.Path, res); err != nil {
 			errMsg = append(errMsg, err.Error())
 		}
@@ -44,7 +44,7 @@ func (c *CgroupManager) Set(res *subsystems.ResourceConfig) error {
 
 func (c *CgroupManager) Destroy() error {
 	var errMsg []string
-	for _, subsys := range subsystems.SubsystemsIns {
+	for _, subsys := range subsystems.Ins {
 		if err := subsys.Remove(c.Path); err != nil {
 			errMsg = append(errMsg, err.Error())
 		}
