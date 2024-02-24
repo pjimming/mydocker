@@ -26,7 +26,7 @@ func Exec(containerId string, cmdArray []string) error {
 	// 把指定PID进程的环境变量传递给新启动的进程，实现通过exec命令也能查询到容器的环境变量
 	envs, err := getEnvsByPid(pid)
 	if err != nil {
-		logrus.Errorf("get envs by pid: [%s] error, %v", pid, err)
+		logrus.Errorf("[Exec] get envs by pid: [%s] error, %v", pid, err)
 		return err
 	}
 	cmd.Env = append(os.Environ(), envs...)
