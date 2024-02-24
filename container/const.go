@@ -11,6 +11,12 @@ const (
 	LogFile       = "container.log"
 )
 
+// nsenter里的C代码里已经出现mydocker_pid和mydocker_cmd这两个Key,主要是为了控制是否执行C代码里面的setns.
+const (
+	EnvExecPid = "mydocker_pid"
+	EnvExecCmd = "mydocker_cmd"
+)
+
 // 容器相关目录
 const (
 	RootUrl         = "/root/"

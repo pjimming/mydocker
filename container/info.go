@@ -3,6 +3,7 @@ package container
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/pjimming/mydocker/utils/jsonx"
 	"os"
 	"path"
 	"strconv"
@@ -10,8 +11,6 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
-
-	"github.com/pjimming/mydocker/utils/stringx"
 )
 
 type Info struct {
@@ -38,7 +37,7 @@ func RecordInfo(containerPid int, commandArray []string, containerName, containe
 		Status:      "RUNNING",
 	}
 
-	infoStr, err := stringx.ToJsonString(containerInfo)
+	infoStr, err := jsonx.ToJsonString(containerInfo)
 	if err != nil {
 		err = fmt.Errorf("to json string fail, %v", err)
 		logrus.Error(err)
@@ -98,9 +97,4 @@ func ReadInfo(containerId string) (*Info, error) {
 		return nil, err
 	}
 	return info, nil
-}
-
-// getContainerDir 获取容器记录在宿主机上的dir
-func getContainerDir(containerId string) string {
-	return fmt.Sprintf(InfoLocFormat, containerId)
 }

@@ -4,7 +4,7 @@ import (
 	"github.com/pjimming/mydocker/cgroups"
 	"github.com/pjimming/mydocker/cgroups/subsystems"
 	"github.com/pjimming/mydocker/container"
-	"github.com/pjimming/mydocker/utils/stringx"
+	"github.com/pjimming/mydocker/utils/randx"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
@@ -17,7 +17,7 @@ import (
 去初始化容器的一些资源。
 */
 func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName string) {
-	containerId := stringx.RandString(container.IDLength)
+	containerId := randx.RandString(container.IDLength)
 
 	parent, writePipe, err := container.NewParentProcess(tty, volume, containerId)
 	if err != nil {

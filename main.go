@@ -1,10 +1,14 @@
 package main
 
 import (
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 	"os"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+
+	// 需要导入nsenter包，以触发C代码
+	_ "github.com/pjimming/mydocker/nsenter"
 )
 
 const usage = `mydocker is a simple container runtime implementation.
@@ -22,6 +26,7 @@ func main() {
 		commitCommand,
 		listCommand,
 		logCommand,
+		execCommand,
 	}
 
 	app.Before = func(ctx *cli.Context) error {
