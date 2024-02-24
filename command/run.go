@@ -112,24 +112,22 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, 
 
 	// new cgroup manager
 	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup")
-	defer func() {
-		if err = cgroupManager.Destroy(); err != nil {
-			logrus.Errorf("cgroup manager destroy fail, %v", err)
-		}
-	}()
-
 	if err = cgroupManager.Set(runResConf); err != nil {
 		logrus.Errorf("set cgroup res fail, %v", err)
 	}
 	if err = cgroupManager.Apply(parent.Process.Pid, runResConf); err != nil {
 		logrus.Errorf("apply %d process cgroup res fail, %v", parent.Process.Pid, err)
 	}
+
 	// 在子进程创建后才能通过匹配来发送参数
 	sendInitCommand(cmd, writePipe)
 	if tty {
 		_ = parent.Wait()
 		container.DeleteWorkSpace("/root", "/root/merged", volume)
 		_ = container.DeleteInfo(containerId)
+		if err = cgroupManager.Destroy(); err != nil {
+			logrus.Errorf("cgroup manager destroy fail, %v", err)
+		}
 	}
 }
 

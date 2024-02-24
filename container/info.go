@@ -1,7 +1,6 @@
 package container
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/pjimming/mydocker/utils/jsonx"
 	"os"
@@ -80,21 +79,7 @@ func DeleteInfo(containerId string) error {
 	return nil
 }
 
+// ReadInfo 根据containerId读取信息
 func ReadInfo(containerId string) (*Info, error) {
-	configFile := path.Join(getContainerDir(containerId), ConfigName)
-	content, err := os.ReadFile(configFile)
-	if err != nil {
-		err = fmt.Errorf("[ReadInfo] read %s file fail, %v", configFile, err)
-		logrus.Error(err)
-		return nil, err
-	}
-
-	info := new(Info)
-	if err = json.Unmarshal(content, info); err != nil {
-		logrus.Errorf("content: %s", string(content))
-		err = fmt.Errorf("[ReadInfo] unmarshal content fail, %v", err)
-		logrus.Error(err)
-		return nil, err
-	}
-	return info, nil
+	return getInfoById(containerId)
 }

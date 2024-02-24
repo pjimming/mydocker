@@ -1,8 +1,8 @@
 package container
 
 import (
+	"github.com/pjimming/mydocker/cgroups"
 	"github.com/sirupsen/logrus"
-	"os"
 )
 
 func Remove(id string) error {
@@ -19,11 +19,12 @@ func Remove(id string) error {
 	}
 
 	// 删除宿主机上关于容器的子目录所有文件
-	dir := getContainerDir(id)
-	if err = os.RemoveAll(dir); err != nil {
-		logrus.Errorf("[Remove][id=%s] remove all %s error, %v", id, dir, err)
+	if err = DeleteInfo(id); err != nil {
 		return err
 	}
 	logrus.Infof("remove container [%s] success", id)
+	if err = cgroups.NewCgroupManager("mydocker-cgroup").Destroy(); err != nil {
+		logrus.Errorf("cgroup rm fail, %v", err)
+	}
 	return nil
 }
