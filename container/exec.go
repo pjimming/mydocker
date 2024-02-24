@@ -1,10 +1,11 @@
 package container
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 func Exec(containerId string, cmdArray []string) error {

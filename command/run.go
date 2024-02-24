@@ -2,14 +2,15 @@ package command
 
 import (
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/pjimming/mydocker/cgroups"
 	"github.com/pjimming/mydocker/cgroups/subsystems"
 	"github.com/pjimming/mydocker/container"
 	"github.com/pjimming/mydocker/utils/randx"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"os"
-	"strings"
 )
 
 var RunCommand = cli.Command{

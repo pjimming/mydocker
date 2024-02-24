@@ -1,9 +1,10 @@
 package command
 
 import (
-	"github.com/pjimming/mydocker/container"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+
+	"github.com/pjimming/mydocker/container"
 )
 
 // InitCommand 内部方法，没有暴露给外部使用

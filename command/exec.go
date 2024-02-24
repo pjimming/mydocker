@@ -2,10 +2,12 @@ package command
 
 import (
 	"fmt"
-	"github.com/pjimming/mydocker/container"
+	"os"
+
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"os"
+
+	"github.com/pjimming/mydocker/container"
 )
 
 var ExecCommand = cli.Command{

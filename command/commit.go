@@ -2,8 +2,10 @@ package command
 
 import (
 	"fmt"
-	"github.com/pjimming/mydocker/container"
+
 	"github.com/urfave/cli"
+
+	"github.com/pjimming/mydocker/container"
 )
 
 var CommitCommand = cli.Command{
