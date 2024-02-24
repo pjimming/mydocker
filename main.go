@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/pjimming/mydocker/command"
 	"os"
 	"time"
 
@@ -21,14 +22,14 @@ func main() {
 	app.Usage = usage
 
 	app.Commands = []cli.Command{
-		initCommand,
-		runCommand,
-		commitCommand,
-		listCommand,
-		logCommand,
-		execCommand,
-		stopCommand,
-		removeCommand,
+		command.InitCommand,
+		command.CommitCommand,
+		command.ExecCommand,
+		command.ListCommand,
+		command.RemoveCommand,
+		command.LogCommand,
+		command.RunCommand,
+		command.StopCommand,
 	}
 
 	app.Before = func(ctx *cli.Context) error {

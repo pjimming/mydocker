@@ -1,12 +1,22 @@
-package main
+package command
 
 import (
 	"fmt"
 	"github.com/pjimming/mydocker/container"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 	"os"
 	"text/tabwriter"
 )
+
+var ListCommand = cli.Command{
+	Name:  "ps",
+	Usage: "list all of the containers",
+	Action: func(ctx *cli.Context) error {
+		listContainers()
+		return nil
+	},
+}
 
 // listContainers 获取所有容器信息，并且打印出来
 // 首先遍历存放容器数据的/var/lib/mydocker/containers/目录，里面每一个子目录都是一个容器。
