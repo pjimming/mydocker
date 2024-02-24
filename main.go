@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/pjimming/mydocker/command"
 	"os"
 	"time"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/urfave/cli"
 
 	// 需要导入nsenter包，以触发C代码
+	"github.com/pjimming/mydocker/command"
 	_ "github.com/pjimming/mydocker/nsenter"
 )
 
