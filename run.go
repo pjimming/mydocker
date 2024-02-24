@@ -19,7 +19,7 @@ import (
 func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName string) {
 	containerId := stringx.RandString(container.IDLength)
 
-	parent, writePipe, err := container.NewParentProcess(tty, volume)
+	parent, writePipe, err := container.NewParentProcess(tty, volume, containerId)
 	if err != nil {
 		return
 	}

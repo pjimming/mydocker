@@ -100,8 +100,9 @@ var runCommand = cli.Command{
 var listCommand = cli.Command{
 	Name:  "ps",
 	Usage: "list all of the containers",
-	Action: func(ctx *cli.Context) {
-		ListContainers()
+	Action: func(ctx *cli.Context) error {
+		listContainers()
+		return nil
 	},
 }
 
@@ -119,5 +120,17 @@ var initCommand = cli.Command{
 		cmd := ctx.Args().Get(0)
 		logrus.Infof("[initCommand] init command %s", cmd)
 		return container.RunContainerInitProcess()
+	},
+}
+
+var logCommand = cli.Command{
+	Name:  "logs",
+	Usage: "print logs of a container",
+	Action: func(ctx *cli.Context) error {
+		if len(ctx.Args()) < 1 {
+			return fmt.Errorf("please input your container id")
+		}
+		containerId := ctx.Args().Get(0)
+		return logContainer(containerId)
 	},
 }

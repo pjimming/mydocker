@@ -8,14 +8,14 @@ import (
 	"text/tabwriter"
 )
 
-// ListContainers 获取所有容器信息，并且打印出来
+// listContainers 获取所有容器信息，并且打印出来
 // 首先遍历存放容器数据的/var/lib/mydocker/containers/目录，里面每一个子目录都是一个容器。
 // 然后使用 getContainerInfo 方法解析子目录中的 config.json 文件拿到容器信息
 // 最后格式化成 table 形式打印出来即可
-func ListContainers() {
+func listContainers() {
 	dirs, err := os.ReadDir(container.InfoLoc)
 	if err != nil {
-		logrus.Errorf("[ListContainers] read dir fail, %v", err)
+		logrus.Errorf("[listContainers] read dir fail, %v", err)
 		return
 	}
 
@@ -23,7 +23,7 @@ func ListContainers() {
 	for _, dir := range dirs {
 		containerInfo, err := container.ReadInfo(dir.Name())
 		if err != nil {
-			logrus.Errorf("[ListContainers] read %s info fail, %v", dir.Name(), err)
+			logrus.Errorf("[listContainers] read %s info fail, %v", dir.Name(), err)
 			continue
 		}
 		containers = append(containers, containerInfo)
@@ -31,7 +31,7 @@ func ListContainers() {
 
 	w := tabwriter.NewWriter(os.Stdout, 12, 1, 3, ' ', 0)
 	if _, err = fmt.Fprint(w, "ID\tNAME\tPID\tSTATUS\tCOMMAND\tCREATED\n"); err != nil {
-		logrus.Errorf("[ListContainers] Fprint fail, %v", err)
+		logrus.Errorf("[listContainers] Fprint fail, %v", err)
 	}
 
 	for _, item := range containers {
@@ -43,10 +43,10 @@ func ListContainers() {
 			item.Command,
 			item.CreatedTime,
 		); err != nil {
-			logrus.Errorf("[ListContainers] Fprint fail %v", err)
+			logrus.Errorf("[listContainers] Fprint fail %v", err)
 		}
 	}
 	if err = w.Flush(); err != nil {
-		logrus.Errorf("[ListContainers] tabwriter flush error, %v", err)
+		logrus.Errorf("[listContainers] tabwriter flush error, %v", err)
 	}
 }

@@ -100,7 +100,7 @@ func ReadInfo(containerId string) (*Info, error) {
 	return info, nil
 }
 
-// 获取容器记录在宿主机上的dir
+// getContainerDir 获取容器记录在宿主机上的dir
 func getContainerDir(containerId string) string {
 	return fmt.Sprintf(InfoLocFormat, containerId)
 }
