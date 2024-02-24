@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"os"
 	"path"
+	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -65,4 +67,54 @@ func findCgroupMountPoint(subsystem string) (string, error) {
 
 	err = scanner.Err()
 	return "", err
+}
+
+func removeCgroup(subsystem, cgroupPath string) error {
+	subsystemCgroupPath, err := getCgroupPath(subsystem, cgroupPath, false)
+	if err != nil {
+		logrus.Errorf("%s subsystem get cgroups path fail, %v", subsystem, err)
+		return err
+	}
+	logrus.Infof("remove all %s", subsystemCgroupPath)
+	return os.RemoveAll(subsystemCgroupPath)
+}
+
+func setCgroup(subsystem, cgroupPath, cgroupFileName, limit string) error {
+	subsystemCgroupPath, err := getCgroupPath(subsystem, cgroupPath, true)
+	if err != nil {
+		logrus.Errorf("%s subsystem get cgroup path fail, %v", subsystem, err)
+		return err
+	}
+
+	logrus.Infof("%s set cgroup %s, limit: %s",
+		subsystem,
+		filepath.Join(subsystemCgroupPath, cgroupFileName),
+		limit,
+	)
+
+	if err = os.WriteFile(path.Join(subsystemCgroupPath, cgroupFileName), []byte(limit), 0644); err != nil {
+		logrus.Errorf("set %s fail, %v", subsystem, err)
+		return err
+	}
+	return nil
+}
+
+func applyCgroup(subsystem, cgroupPath string, pid int) error {
+	subsystemCgroupPath, err := getCgroupPath(subsystem, cgroupPath, false)
+	if err != nil {
+		logrus.Errorf("%s get cgroups path fail, %v", subsystem, err)
+		return err
+	}
+
+	logrus.Infof("%s apply cgroup %s, pid: %d",
+		subsystem,
+		subsystemCgroupPath,
+		pid,
+	)
+
+	if err = os.WriteFile(path.Join(subsystemCgroupPath, "tasks"), []byte(strconv.Itoa(pid)), 0644); err != nil {
+		logrus.Errorf("apply %d to cpu tasks fail, %v", pid, err)
+		return err
+	}
+	return nil
 }

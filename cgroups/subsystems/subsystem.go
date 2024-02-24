@@ -18,6 +18,8 @@ type Subsystem interface {
 	Apply(cgroupPath string, pid int, res *ResourceConfig) error
 	// Remove 移除某个cgroup
 	Remove(cgroupPath string) error
+	// CgroupFileName 返回控制子系统资源的cgroup文件名
+	CgroupFileName() string
 }
 
 var SubsystemsIns = []Subsystem{
