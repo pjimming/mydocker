@@ -56,6 +56,10 @@ var runCommand = cli.Command{
 			Name:  "v",
 			Usage: "volume, e.g.: -v /etc/conf:/etc/conf",
 		},
+		cli.StringFlag{
+			Name:  "name",
+			Usage: "container name",
+		},
 	},
 
 	/*
@@ -79,7 +83,7 @@ var runCommand = cli.Command{
 		if tty && detach {
 			return fmt.Errorf("it and d paramter can not both provided")
 		}
-		
+
 		resConf := &subsystems.ResourceConfig{
 			MemoryLimit: ctx.String("mem"),
 			CpuShare:    ctx.String("cpushare"),
@@ -87,8 +91,17 @@ var runCommand = cli.Command{
 		}
 		logrus.Infof("run cmd = %s", strings.Join(cmdArray, " "))
 		volume := ctx.String("v")
-		Run(tty, cmdArray, resConf, volume)
+		containerName := ctx.String("name")
+		Run(tty, cmdArray, resConf, volume, containerName)
 		return nil
+	},
+}
+
+var listCommand = cli.Command{
+	Name:  "ps",
+	Usage: "list all of the containers",
+	Action: func(ctx *cli.Context) {
+		ListContainers()
 	},
 }
 

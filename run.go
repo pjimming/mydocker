@@ -4,6 +4,7 @@ import (
 	"github.com/pjimming/mydocker/cgroups"
 	"github.com/pjimming/mydocker/cgroups/subsystems"
 	"github.com/pjimming/mydocker/container"
+	"github.com/pjimming/mydocker/utils/stringx"
 	"github.com/sirupsen/logrus"
 	"os"
 	"strings"
@@ -15,13 +16,21 @@ import (
 进程，然后在子进程中，调用/proc/self/exe,也就是调用自己，发送init参数，调用我们写的init方法，
 去初始化容器的一些资源。
 */
-func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume string) {
+func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName string) {
+	containerId := stringx.RandString(container.IDLength)
+
 	parent, writePipe, err := container.NewParentProcess(tty, volume)
 	if err != nil {
 		return
 	}
 	if err = parent.Start(); err != nil {
 		logrus.Errorf("run fail, %v", err)
+	}
+
+	// record container info
+	if err = container.RecordInfo(parent.Process.Pid, cmd, containerName, containerId); err != nil {
+		logrus.Errorf("record container info fail, %v", err)
+		return
 	}
 
 	// new cgroup manager
@@ -43,6 +52,7 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume s
 	if tty {
 		_ = parent.Wait()
 		container.DeleteWorkSpace("/root", "/root/merged", volume)
+		_ = container.DeleteInfo(containerId)
 	}
 }
 
