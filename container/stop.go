@@ -52,5 +52,6 @@ func Stop(containerId string) error {
 		logrus.Errorf("[Stop][id=%s] write %s error, %v", containerId, configFilePath, err)
 		return err
 	}
+	logrus.Infof("[%s] stop container success", containerId)
 	return nil
 }
