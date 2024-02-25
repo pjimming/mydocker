@@ -28,10 +28,10 @@ func getPidById(id string) (string, error) {
 
 // 根据pid获取进程的env
 func getEnvsByPid(pid string) ([]string, error) {
-	path := fmt.Sprintf("/proc/%s/environ", pid)
-	content, err := os.ReadFile(path)
+	filePath := fmt.Sprintf("/proc/%s/environ", pid)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
-		logrus.Errorf("read %s error, %v", path, err)
+		logrus.Errorf("read %s error, %v", filePath, err)
 		return nil, err
 	}
 

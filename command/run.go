@@ -52,6 +52,10 @@ var RunCommand = cli.Command{
 			Name:  "name",
 			Usage: "container name",
 		},
+		cli.StringSliceFlag{
+			Name:  "e",
+			Usage: "set environment",
+		},
 	},
 
 	/*
@@ -83,7 +87,8 @@ var RunCommand = cli.Command{
 		logrus.Infof("run cmd = %s", strings.Join(cmdArray, " "))
 		volume := ctx.String("v")
 		containerName := ctx.String("name")
-		Run(tty, cmdArray, resConf, volume, containerName, imageName)
+		environSlice := ctx.StringSlice("e")
+		Run(tty, cmdArray, resConf, volume, containerName, imageName, environSlice)
 		return nil
 	},
 }
@@ -94,10 +99,10 @@ var RunCommand = cli.Command{
 进程，然后在子进程中，调用/proc/self/exe,也就是调用自己，发送init参数，调用我们写的init方法，
 去初始化容器的一些资源。
 */
-func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName, imageName string) {
+func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName, imageName string, envSlice []string) {
 	containerId := randx.RandString(container.IDLength)
 
-	parent, writePipe, err := container.NewParentProcess(tty, volume, containerId, imageName)
+	parent, writePipe, err := container.NewParentProcess(tty, volume, containerId, imageName, envSlice)
 	if err != nil {
 		return
 	}
@@ -124,7 +129,9 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, 
 	sendInitCommand(cmd, writePipe)
 	if tty {
 		_ = parent.Wait()
-		container.DeleteWorkSpace(volume, containerId)
+		if err = container.DeleteWorkSpace(volume, containerId); err != nil {
+			logrus.Errorf("delete work space fail, %v", err)
+		}
 		_ = container.DeleteInfo(containerId)
 		if err = cgroupManager.Destroy(); err != nil {
 			logrus.Errorf("cgroup manager destroy fail, %v", err)
