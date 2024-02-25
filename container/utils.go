@@ -3,6 +3,7 @@ package container
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -49,4 +50,40 @@ func getInfoById(id string) (*Info, error) {
 		return nil, err
 	}
 	return info, nil
+}
+
+func getImage(imageName string) string {
+	return RootUrl + imageName + ".tar"
+}
+func getUnTar(imageName string) string {
+	return RootUrl + imageName + "/"
+}
+
+func getRoot(containerId string) string {
+	return path.Join(RootUrl, containerId)
+}
+
+func getLower(containerId string) string {
+	return fmt.Sprintf(lowerDirFormat, containerId)
+}
+
+func getUpper(containerId string) string {
+	return fmt.Sprintf(upperDirFormat, containerId)
+}
+
+func getWorker(containerId string) string {
+	return fmt.Sprintf(workDirFormat, containerId)
+}
+
+func getMerged(containerId string) string {
+	return fmt.Sprintf(mergedDirFormat, containerId)
+}
+
+func getOverlayFsDirs(containerId string) string {
+	// lowerdir=lower1:lower2:lower3,upperdir=upper,workdir=work
+	return fmt.Sprintf(overlayFSFormat,
+		getLower(containerId),
+		getUpper(containerId),
+		getWorker(containerId),
+	)
 }

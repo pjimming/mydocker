@@ -1,8 +1,9 @@
 package container
 
 import (
-	"github.com/pjimming/mydocker/cgroups"
 	"github.com/sirupsen/logrus"
+
+	"github.com/pjimming/mydocker/cgroups"
 )
 
 func Remove(id string) error {
@@ -17,6 +18,8 @@ func Remove(id string) error {
 		logrus.Errorf("[Remove][id=%s] can not remove, status is %s; pid is %s", id, info.Status, info.Pid)
 		return nil
 	}
+
+	DeleteWorkSpace(info.Volume, id)
 
 	// 删除宿主机上关于容器的子目录所有文件
 	if err = DeleteInfo(id); err != nil {

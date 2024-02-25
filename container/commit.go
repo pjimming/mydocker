@@ -1,17 +1,18 @@
 package container
 
 import (
-	"fmt"
-	"github.com/sirupsen/logrus"
 	"os/exec"
+
+	"github.com/sirupsen/logrus"
 )
 
-func Commit(imageName string) error {
-	mntPath := "/root/merged"
-	imageTar := fmt.Sprintf("/root/%s.tar", imageName)
-	logrus.Infof("commit image: %s", imageTar)
+func Commit(containerId, imageName string) error {
+	mntPath := getMerged(containerId)
+	imageTar := getImage(imageName)
 	if _, err := exec.Command("tar", "-czf", imageTar, "-C", mntPath, ".").CombinedOutput(); err != nil {
-		return fmt.Errorf("tar folder %s fail, %v", mntPath, err)
+		logrus.Errorf("tar folder %s fail, %v", mntPath, err)
+		return err
 	}
+	logrus.Infof("commit %s container success, image: %s", containerId, imageTar)
 	return nil
 }

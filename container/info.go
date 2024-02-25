@@ -2,12 +2,13 @@ package container
 
 import (
 	"fmt"
-	"github.com/pjimming/mydocker/utils/jsonx"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pjimming/mydocker/utils/jsonx"
 
 	"github.com/sirupsen/logrus"
 )
@@ -19,10 +20,11 @@ type Info struct {
 	Command     string `json:"command"`    // 容器内init运行命令
 	CreatedTime string `json:"createTime"` // 创建时间
 	Status      string `json:"status"`     // 容器的状态
+	Volume      string `json:"volume"`     // 挂载的数据卷
 }
 
 // RecordInfo 记录容器相关信息
-func RecordInfo(containerPid int, commandArray []string, containerName, containerId string) error {
+func RecordInfo(containerPid int, commandArray []string, containerName, containerId, volume string) error {
 	if containerName == "" {
 		containerName = containerId
 	}
@@ -34,6 +36,7 @@ func RecordInfo(containerPid int, commandArray []string, containerName, containe
 		Command:     command,
 		CreatedTime: time.Now().Format(time.DateTime),
 		Status:      RUNNING,
+		Volume:      volume,
 	}
 
 	infoStr, err := jsonx.ToJsonString(containerInfo)

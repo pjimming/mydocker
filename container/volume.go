@@ -16,72 +16,90 @@ import (
 */
 
 // NewWorkSpace create an overlays filesystem as container root workspace
-func NewWorkSpace(rootPath, mntPath, volume string) {
-	createLower(rootPath)
-	createDirs(rootPath)
-	mountOverlayFs(rootPath, mntPath)
+/*
+1）创建lower层
+2）创建upper、worker层
+3）创建merged目录并挂载overlayFS
+4）如果有指定volume则挂载volume
+*/
+func NewWorkSpace(volume, imageName, containerId string) error {
+	if err := createLower(imageName, containerId); err != nil {
+		logrus.Errorf("[NewWorkSpace][image:%s][containerId:%s] create lower error, %v", imageName, containerId, err)
+		return err
+	}
+	if err := createUpperAndWorker(containerId); err != nil {
+		logrus.Errorf("[NewWorkSpace][containerId:%s] create upper and worker error, %v", containerId, err)
+		return err
+	}
+	if err := mountOverlayFs(containerId); err != nil {
+		logrus.Errorf("[NewWorkSpace][containerId:%s] mount overlayFs error, %v", containerId, err)
+		return err
+	}
 
 	if volume != "" {
 		hostPath, containerPath, err := volumeExtract(volume)
 		if err != nil {
 			logrus.Errorf("volume extract fail: %v", err)
-			return
+			return err
 		}
-		mountVolume(mntPath, hostPath, containerPath)
+		if err = mountVolume(containerId, hostPath, containerPath); err != nil {
+			logrus.Errorf("[NewWorkSpace][ContainerId:%s] mount volume error, %v", containerId, err)
+			return err
+		}
 	}
+	return nil
 }
 
 // createLower 把busybox作为overlays的lower层
-func createLower(rootPath string) {
-	busyboxPath := filepath.Join(rootPath, "busybox/")
-	busyboxTarPath := filepath.Join(rootPath, "busybox.tar")
-	// 检查是否已经存在busybox文件夹
-	exist, err := pathExists(busyboxPath)
-	if err != nil {
-		logrus.Errorf("check %s exist fail, %v", busyboxPath, err)
+func createLower(imageName, containerId string) error {
+	imagePath := getImage(imageName)
+	lower := getLower(containerId)
+
+	if err := os.MkdirAll(lower, 0622); err != nil {
+		logrus.Errorf("mkdir all %s error, %v", lower, err)
+		return err
 	}
-	if !exist {
-		if err = os.Mkdir(busyboxPath, 0777); err != nil {
-			logrus.Errorf("mkdir %s fail, %v", busyboxPath, err)
-		}
-		if _, err = exec.Command("tar", "-xvf", busyboxTarPath, "-C", busyboxPath).CombinedOutput(); err != nil {
-			logrus.Errorf("unTar dir %s fail, %v", busyboxTarPath, err)
-		}
+	if _, err := exec.Command("tar", "-xvf", imagePath, "-C", lower).CombinedOutput(); err != nil {
+		logrus.Errorf("[createLower][tar -xvf %s -C %s] error, %v", imagePath, lower, err)
+		return err
 	}
+	return nil
 }
 
-// createDirs 创建overlay fs需要的的upper、worker目录
-func createDirs(rootPath string) {
-	upperPath := filepath.Join(rootPath, "upper/")
-	if err := os.Mkdir(upperPath, 0777); err != nil {
-		logrus.Errorf("mkdir %s fail, %v", upperPath, err)
+// createUpperAndWorker 创建overlay fs需要的的upper、worker目录
+func createUpperAndWorker(containerId string) error {
+	upper := getUpper(containerId)
+	if err := os.MkdirAll(upper, 0777); err != nil {
+		logrus.Errorf("mkdir %s fail, %v", upper, err)
+		return err
 	}
-	workPath := filepath.Join(rootPath, "work/")
-	if err := os.Mkdir(workPath, 0777); err != nil {
-		logrus.Errorf("mkdir %s fail, %v", workPath, err)
+	worker := getWorker(containerId)
+	if err := os.Mkdir(worker, 0777); err != nil {
+		logrus.Errorf("mkdir %s fail, %v", worker, err)
+		return err
 	}
+	return nil
 }
 
-func mountOverlayFs(rootPath, mntPath string) {
+func mountOverlayFs(containerId string) error {
 	// mount -t overlay overlay -o lowerdir=lower1:lower2:lower3,upperdir=upper,workdir=work merged
 	// 创建对应的挂载路径
-	if err := os.Mkdir(mntPath, 0777); err != nil {
+	mntPath := getMerged(containerId)
+	if err := os.MkdirAll(mntPath, 0777); err != nil {
 		logrus.Errorf("mkdir %s fail, %v", mntPath, err)
+		return err
 	}
 	// 拼接参数
 	// lowerdir=/root/busybox,upperdir=/root/upper,workdir=/root/merged
-	dirs := fmt.Sprintf("lowerdir=%s,upperdir=%s,workdir=%s",
-		filepath.Join(rootPath, "busybox/"),
-		filepath.Join(rootPath, "upper/"),
-		filepath.Join(rootPath, "work/"),
-	)
-	cmd := exec.Command("mount", "-t", "overlay", "overlay", "-o", dirs, mntPath)
+	cmd := exec.Command("mount", "-t", "overlay", "overlay", "-o", getOverlayFsDirs(containerId), mntPath)
 	logrus.Infof(cmd.String())
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
 		logrus.Errorf("mount overlay fail, %v", err)
+		return err
 	}
+	return nil
 }
 
 func volumeExtract(volume string) (sourcePath, destinationPath string, err error) {
@@ -98,84 +116,100 @@ func volumeExtract(volume string) (sourcePath, destinationPath string, err error
 }
 
 // 使用 bind mount 挂载 volume
-func mountVolume(mntPath, hostPath, containerPath string) {
-	if err := os.Mkdir(hostPath, 0777); err != nil {
-		logrus.Errorf("mkdir fail, %v", err)
+func mountVolume(containerId, hostPath, containerPath string) error {
+	// 宿主机目录
+	if err := os.MkdirAll(hostPath, 0777); err != nil {
+		logrus.Errorf("[mountVolume] mkdir %s fail, %v", hostPath, err)
+		return err
 	}
-	containerPathInHost := path.Join(mntPath, containerPath)
-	if err := os.Mkdir(containerPathInHost, 0777); err != nil {
-		logrus.Errorf("mkdir fail, %v", err)
+	// 容器目录
+	mntPath := getMerged(containerId)
+	containerVolumePath := filepath.Join(mntPath, containerPath)
+	if err := os.MkdirAll(containerVolumePath, 0777); err != nil {
+		logrus.Errorf("[mountVolume] mkdir %s fail, %v", containerVolumePath, err)
+		return err
 	}
 	// 通过bind mount 将宿主机目录挂载到容器目录
-	// mount -o bind /hostPath /containerPath
-	cmd := exec.Command("mount", "-o", "bind", hostPath, containerPathInHost)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+	// mount -o bind /hostPath /containerVolumePath
+	cmd := exec.Command("mount", "-o", "bind", hostPath, containerVolumePath)
+
+	logrus.Infof("[mountVolume] cmd = %s", cmd.String())
+	if _, err := cmd.CombinedOutput(); err != nil {
 		logrus.Errorf("mount volume failed. %v", err)
+		return err
 	}
+	return nil
 }
 
-func pathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
-	}
-	if os.IsNotExist(err) {
-		return false, nil
-	}
-	return false, err
-}
-
-func DeleteWorkSpace(rootPath, mntPath, volume string) {
+// DeleteWorkSpace 删除overlayFs当容器退出
+/*
+和创建相反
+1）有volume则卸载volume
+2）卸载merged目录
+3）卸载upper、worker层
+4）移除该容器的overlayFs目录
+*/
+func DeleteWorkSpace(volume, containerId string) error {
+	logrus.Infof("[DeleteWorkSpace] volume:%s; containerId:%s", volume, containerId)
+	// 1. umount volume
 	if volume != "" {
 		_, containerPath, err := volumeExtract(volume)
 		if err != nil {
-			logrus.Errorf("volume extract fail, %v", err)
-			return
+			logrus.Errorf("[DeleteWorkSpace] volume %s extract fail, %v", volume, err)
+			return err
 		}
-		umountVolume(mntPath, containerPath)
+		if err = umountVolume(containerId, containerPath); err != nil {
+			logrus.Errorf("[DeleteWorkSpace] umount volume fail, %v", err)
+			return err
+		}
 	}
 
-	umountOverlayFs(mntPath)
-	deleteDirs(rootPath)
+	if err := umountOverlayFs(containerId); err != nil {
+		logrus.Errorf("[DeleteWorkSpace] umount overlayFs error, %v", err)
+		return err
+	}
+	if err := deleteDirs(containerId); err != nil {
+		logrus.Errorf("[DeleteWorkSpace] deleteDirs error, %v", err)
+		return err
+	}
+	return nil
 }
 
-func umountVolume(mntPath, containerPath string) {
+func umountVolume(containerId, containerPath string) error {
 	// mntPath 为容器在宿主机上的挂载点，例如 /root/merged
 	// containerPath 为 volume 在容器中对应的目录，例如 /root/tmp
-	// containerPathInHost 则是容器中目录在宿主机上的具体位置，例如 /root/merged/root/tmp
-	containerPathInHost := path.Join(mntPath, containerPath)
+	// containerPathInHost 则是容器中目录在宿主机上的具体位置，例如 /root/{containerId}/merged/root/tmp
+	containerPathInHost := path.Join(getMerged(containerId), containerPath)
 	cmd := exec.Command("umount", containerPathInHost)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
+
+	logrus.Infof("[umountVolume] cmd = %s", cmd.String())
+	if _, err := cmd.CombinedOutput(); err != nil {
 		logrus.Errorf("umount volume failed. %v", err)
+		return err
 	}
+	logrus.Infof("umount volume %s success", containerPathInHost)
+	return nil
 }
 
-func umountOverlayFs(mntPath string) {
+func umountOverlayFs(containerId string) error {
+	mntPath := getMerged(containerId)
 	cmd := exec.Command("umount", mntPath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	logrus.Infof(cmd.String())
-	if err := cmd.Run(); err != nil {
+
+	logrus.Info(cmd.String())
+	if _, err := cmd.CombinedOutput(); err != nil {
 		logrus.Errorf("umount command run fail, %v", err)
+		return err
 	}
-	if err := os.RemoveAll(mntPath); err != nil {
-		logrus.Errorf("remove dir %s fail, %v", mntPath, err)
-	}
+	logrus.Infof("umount overlayFs %s success", mntPath)
+	return nil
 }
 
-func deleteDirs(rootPath string) {
-	upperPath := filepath.Join(rootPath, "upper")
-	if err := os.RemoveAll(upperPath); err != nil {
-		logrus.Errorf("remove dir %s fail, %v", upperPath, err)
+func deleteDirs(containerId string) error {
+	rootDir := getRoot(containerId)
+	if err := os.RemoveAll(rootDir); err != nil {
+		logrus.Errorf("[deleteDirs] rm -rf %s error, %v", rootDir, err)
+		return err
 	}
-	logrus.Infof("rm dir %s", upperPath)
-	workPath := filepath.Join(rootPath, "work")
-	if err := os.RemoveAll(workPath); err != nil {
-		logrus.Errorf("remove dir %s fail, %v", workPath, err)
-	}
-	logrus.Infof("rm dir %s", workPath)
+	logrus.Infof("rm -rf %s success", rootDir)
+	return nil
 }

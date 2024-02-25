@@ -5,12 +5,13 @@ import (
 	"os"
 	"strings"
 
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+
 	"github.com/pjimming/mydocker/cgroups"
 	"github.com/pjimming/mydocker/cgroups/subsystems"
 	"github.com/pjimming/mydocker/container"
 	"github.com/pjimming/mydocker/utils/randx"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli"
 )
 
 var RunCommand = cli.Command{
@@ -63,10 +64,9 @@ var RunCommand = cli.Command{
 			return fmt.Errorf("missing container command")
 		}
 
-		cmdArray := make([]string, 0)
-		for _, cmd := range ctx.Args() {
-			cmdArray = append(cmdArray, cmd)
-		}
+		imageName := ctx.Args().First()
+		var cmdArray []string
+		cmdArray = append(cmdArray, ctx.Args().Tail()...)
 		tty := ctx.Bool("it")
 		detach := ctx.Bool("d")
 
@@ -83,7 +83,7 @@ var RunCommand = cli.Command{
 		logrus.Infof("run cmd = %s", strings.Join(cmdArray, " "))
 		volume := ctx.String("v")
 		containerName := ctx.String("name")
-		Run(tty, cmdArray, resConf, volume, containerName)
+		Run(tty, cmdArray, resConf, volume, containerName, imageName)
 		return nil
 	},
 }
@@ -94,10 +94,10 @@ var RunCommand = cli.Command{
 进程，然后在子进程中，调用/proc/self/exe,也就是调用自己，发送init参数，调用我们写的init方法，
 去初始化容器的一些资源。
 */
-func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName string) {
+func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName, imageName string) {
 	containerId := randx.RandString(container.IDLength)
 
-	parent, writePipe, err := container.NewParentProcess(tty, volume, containerId)
+	parent, writePipe, err := container.NewParentProcess(tty, volume, containerId, imageName)
 	if err != nil {
 		return
 	}
@@ -106,7 +106,7 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, 
 	}
 
 	// record container info
-	if err = container.RecordInfo(parent.Process.Pid, cmd, containerName, containerId); err != nil {
+	if err = container.RecordInfo(parent.Process.Pid, cmd, containerName, containerId, volume); err != nil {
 		logrus.Errorf("record container info fail, %v", err)
 		return
 	}
@@ -124,7 +124,7 @@ func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, 
 	sendInitCommand(cmd, writePipe)
 	if tty {
 		_ = parent.Wait()
-		container.DeleteWorkSpace("/root", "/root/merged", volume)
+		container.DeleteWorkSpace(volume, containerId)
 		_ = container.DeleteInfo(containerId)
 		if err = cgroupManager.Destroy(); err != nil {
 			logrus.Errorf("cgroup manager destroy fail, %v", err)
