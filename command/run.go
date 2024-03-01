@@ -61,7 +61,7 @@ var RunCommand = cli.Command{
 	/*
 		1. 判断参数是否包含command
 		2. 获取用户指定的command
-		3. 调用 Run function 去准备启动容器
+		3. 调用 run function 去准备启动容器
 	*/
 	Action: func(ctx *cli.Context) error {
 		if len(ctx.Args()) < 1 {
@@ -88,18 +88,18 @@ var RunCommand = cli.Command{
 		volume := ctx.String("v")
 		containerName := ctx.String("name")
 		environSlice := ctx.StringSlice("e")
-		Run(tty, cmdArray, resConf, volume, containerName, imageName, environSlice)
+		run(tty, cmdArray, resConf, volume, containerName, imageName, environSlice)
 		return nil
 	},
 }
 
-// Run 执行具体 command
+// run 执行具体 command
 /*
 这里的Start方法是真正开始前面创建好的command的调用，它首先会clone出来一个namespace隔离的
 进程，然后在子进程中，调用/proc/self/exe,也就是调用自己，发送init参数，调用我们写的init方法，
 去初始化容器的一些资源。
 */
-func Run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName, imageName string, envSlice []string) {
+func run(tty bool, cmd []string, runResConf *subsystems.ResourceConfig, volume, containerName, imageName string, envSlice []string) {
 	containerId := randx.RandString(container.IDLength)
 
 	parent, writePipe, err := container.NewParentProcess(tty, volume, containerId, imageName, envSlice)
