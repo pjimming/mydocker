@@ -30,6 +30,7 @@ func main() {
 		command.LogCommand,
 		command.RunCommand,
 		command.StopCommand,
+		command.NetworkCommand,
 	}
 
 	app.Before = func(ctx *cli.Context) error {
